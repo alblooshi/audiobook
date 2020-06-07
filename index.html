@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="ar">
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+<link href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+
+<style>
+body {
+  font-family: Arial;
+  margin: 0;
+  align-items: center;
+  direction: rtl;
+}
+
+
+
+img {
+  vertical-align: middle;
+}
+
+
+
+/* Hide the images by default */
+.mySlides {
+  display: none;
+}
+
+/* Add a pointer when hovering over the thumbnail images */
+.cursor {
+  cursor: pointer;
+}
+
+/* Next & previous buttons */
+.prev,
+.next {
+  cursor: pointer;
+  position: absolute;
+  top: 40%;
+  width: auto;
+  padding: 16px;
+  margin-top: -50px;
+  color:black;
+  font-weight: bold;
+  font-size: 20px;
+  border-radius: 0 3px 3px 0;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Position the "next button" to the right */
+.prev {
+  left: 0;
+  border-radius: 3px 0 0 3px;
+}
+
+.next {
+  right: 0;
+  border-radius: 3px 0 0 3px;
+}
+
+
+
+/* Number text (1/3 etc) */
+.numbertext {
+  color:black;
+  font-size: 20px;
+  padding: 8px 12px;
+}
+
+
+
+
+
+</style>
+<body > 
+
+
+
+<div class="container" id="container" >
+    <div  id="SlidesContainer" style="text-align: center; "> </div>
+
+
+
+    <i  class="prev fa fa-chevron-left fa-5x" aria-hidden="true" onclick="moveSlides(1)"></i>
+
+    <i class="next fa fa-chevron-right fa-5x" aria-hidden="true" onclick="moveSlides(-1)"></i>
+
+
+
+
+</div>
+
+<script>
+    let pagesBaseUrl = "./images/mobile/";
+    let audioBaseUrl = "./sound/";
+    let pictureIndex = 0;
+    let pictures ;
+    let audioList=["",""];
+    let audioStartPage=3;
+    let slideIndex=0;
+    let currentAudio;
+    let allAudio;
+
+
+    $(function() {
+    function getPages() {
+        $.ajax({
+            url: pagesBaseUrl,
+            type: 'GET',
+            async: false,
+            }).success(function(data) {
+            pictures = [];
+            $(data).find("a[href]").each(function() {
+                var href = $(this).attr('href');
+                if (href.indexOf('.jpg') > 0 || href.indexOf('.png') > 0 || href.indexOf('.jpeg') > 0) {
+                    pictures.push(href);
+                }
+            });      
+
+            
+        });
+            
+    }
+
+    function getAudioFiles() {
+        $.ajax({
+            url: audioBaseUrl,
+            type: 'GET',
+            async: false,
+            }).success(function(data) {
+                
+                $(data).find("a[href]").each(function() {
+                var href = $(this).attr('href');
+                if (href.indexOf('.mp3') > 0 || href.indexOf('.m4a') > 0 ) {
+                    audioList.push(href);
+                }
+            });     
+            ;
+            
+        });
+            
+    }
+
+    getPages();
+    getAudioFiles()
+    populateHTML();
+    showSlides(slideIndex); 
+    
+    });
+
+    function populateHTML(){
+        var SlidesContainer=document.getElementById("SlidesContainer");
+        
+        for (i = 0; i < pictures.length; i++) {
+            let slide=document.createElement("div");
+            slide.className="mySlides";
+            let numbertext=document.createElement("div");
+            numbertext.className="numbertext";
+            numbertext.innerHTML= i+" /"+pictures.length;
+            slide.appendChild(numbertext)
+            let newImage=document.createElement("img");
+            newImage.src=pagesBaseUrl+pictures[i];
+            newImage.style="margin-bottom:10px; width:90%; height:90%; border-radius: 25px; align:center;";
+            newImage.className="responsive";
+            slide.appendChild(newImage); 
+
+            if(i>(audioStartPage-2) && i<(audioList.length)){
+                let audioFile=document.createElement("div");                
+                audioFile.innerHTML=` <audio  id="myAudio" controls><source src="./sound/${audioList[i]}" ></audio>`;                                
+                slide.appendChild(audioFile);
+            }
+            SlidesContainer.appendChild(slide);          
+        }
+
+
+
+
+
+    }
+
+    function showSlides(n){  
+        let slidesElements = document.getElementsByClassName("mySlides");  
+        allAudio=document.getElementsByTagName("audio")
+
+        for (i = 0; i < allAudio.length; i++) {
+            allAudio[i].pause();                      
+        }  
+
+        
+        for (i = 0; i < slidesElements.length; i++) {
+            slidesElements[i].style.display = "none";
+            
+        }        
+        slidesElements[n].style.display = "block" ;
+
+      
+    }
+
+    function moveSlides(i){    
+
+        slideIndex += i;
+        if (slideIndex<0){
+            slideIndex=0;
+        }
+        if (slideIndex>pictures.length-1){
+            slideIndex=pictures.length-1;
+        }
+        showSlides(slideIndex);          
+    }
+
+
+    let mainPage=document.getElementById("container");
+
+    let touchobj;
+
+    let startX;
+    let dist;
+
+    mainPage.addEventListener('touchstart', function(e){
+
+        touchobj = e.changedTouches[0]
+
+        startX = touchobj.pageX;
+
+        startY = touchobj.pageY;
+
+
+    });
+ 
+
+ 
+    mainPage.addEventListener('touchend', function(e){
+        touchobj = e.changedTouches[0]
+        if (touchobj.pageX > startX || touchobj.pageY < startY){
+          moveSlides(1)
+        }
+
+        if (touchobj.pageX < startX || touchobj.pageY > startY){
+          moveSlides(-1)
+        }
+        
+
+    })
+
+</script>
+
+    
+</body>
+</html>
